@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DompetKita - Kelola Keuangan UMKM & Pribadi</title>
+    <!-- Menggunakan Phosphor Icons untuk ikon modern -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a0ca3;
+            --secondary: #4cc9f0;
+            --success: #10b981; /* Hijau untuk Pemasukan */
+            --danger: #ef4444;  /* Merah untuk Pengeluaran */
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        /* --- LAYOUT UTAMA --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-action {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .btn-action:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--bg-body);
+        }
+
+        /* --- DASHBOARD KARTU --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card .amount {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .card.income .amount { color: var(--success); }
+        .card.expense .amount { color: var(--danger); }
+        .card.balance .amount { color: var(--primary); }
+
+        /* --- PROGRESS BAR ANGGARAN --- */
+        .budget-container {
+            margin-top: 15px;
+        }
+        .progress-bg {
+            background: #e5e7eb;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .progress-fill.warning { background: #f59e0b; }
+        .progress-fill.danger { background: var(--danger); }
+        .budget-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* --- DAFTAR TRANSAKSI --- */
+        .transactions-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .transaction-list {
+            list-style: none;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .transaction-item:last-child { border-bottom: none; }
+
+        .t-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .t-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        .t-icon.inc { background: #d1fae5; color: var(--success); }
+        .t-icon.exp { background: #fee2e2; color: var(--danger); }
+
+        .t-details h4 { font-size: 1rem; margin-bottom: 2px; }
+        .t-details p { font-size: 0.8rem; color: var(--text-muted); }
+
+        .t-amount {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .t-amount.inc { color: var(--success); }
+        .t-amount.exp { color: var(--danger); }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-left: 15px;
+            font-size: 1.2rem;
+        }
+        .btn-delete:hover { color: var(--danger); }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        /* --- FORM STYLES --- */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .radio-label:has(input:checked) {
+            background: #eef2ff;
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* --- TOAST NOTIFICATION --- */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--text-main);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            transition: transform 0.3s;
+            z-index: 2000;
+        }
+        .toast.show { transform: translateY(0); }
+
+        /* --- BANK CODES TABLE --- */
+        .bank-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .bank-table th, .bank-table td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .bank-table th { background: var(--bg-body); font-size: 0.85rem; }
+        .bank-table td { font-size: 0.9rem; }
+
+        @media (max-width: 600px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 15px; text-align: center; }
+            .btn-action { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="ph ph-wallet"></i> DompetKita
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-action btn-secondary" onclick="app.openBankModal()">
+                    <i class="ph ph-bank"></i> Kode Bank
+                </button>
+                <button class="btn-action" onclick="app.openModal()">
+                    <i class="ph ph-plus"></i> Transaksi Baru
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Summary -->
+        <section class="dashboard-grid">
+            <!-- Saldo -->
+            <div class="card balance">
+                <h3>Saldo Saat Ini</h3>
+                <div class="amount" id="totalBalance">Rp 0</div>
+                <div class="budget-container" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:0.8rem; color:var(--text-muted)">Atur Anggaran Bulanan:</span>
+                        <button onclick="app.setBudget()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.9rem; font-weight:600;">Edit</button>
+                    </div>
+                    <div class="budget-text">
+                        <span>Terpakai: <b id="budgetUsedText">Rp 0</b></span>
+                        <span>Limit: <b id="budgetLimitText">Rp 0</b></span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="budgetProgress"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pemasukan -->
+            <div class="card income">
+                <h3>Pemasukan</h3>
+                <div class="amount" id="totalIncome">Rp 0</div>
+            </div>
+
+            <!-- Pengeluaran -->
+            <div class="card expense">
+                <h3>Pengeluaran</h3>
+                <div class="amount" id="totalExpense">Rp 0</div>
+            </div>
+        </section>
+
+        <!-- Daftar Transaksi -->
+        <section class="transactions-section">
+            <div class="section-header">
+                <h3>Riwayat Transaksi</h3>
+                <select class="form-control" style="width: auto;" id="filterType" onchange="app.render()">
+                    <option value="all">Semua</option>
+                    <option value="income">Pemasukan</option>
+                    <option value="expense">Pengeluaran</option>
+                </select>
+            </div>
+            <ul class="transaction-list" id="transactionList">
+                <!-- Transaksi akan dimasukkan di sini oleh JS -->
+                <li style="text-align: center; color: var(--text-muted); padding: 20px;">Belum ada data transaksi.</li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- Modal Transaksi -->
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Tambah Transaksi</h3>
+                <button class="close-modal" onclick="app.closeModal()">&times;</button>
+            </div>
+            <form id="transactionForm" onsubmit="app.addTransaction(event)">
+                <div class="form-group">
+                    <label>Jenis Transaksi</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="income" checked> Pemasukan
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="expense"> Pengeluaran
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <input type="text" id="desc" class="form-control" placeholder="Contoh: Penjualan Kopi / Beli Bensin" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Jumlah (Rp)</label>
+                    <input type="number" id="amount" class="form-control" placeholder="0" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn-action" style="width: 100%; justify-content: center;">Simpan Transaksi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Set Budget -->
+    <div class="modal-overlay" id="budgetModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Atur Anggaran Bulanan</h3>
+                <button class="close-modal" onclick="app.closeBudgetModal()">&times;</button>
+            </div>
+            <form onsubmit="app.saveBudget(event)">
+                <div class="form-group">
+                    <label>Limit Pengeluaran Bulan Ini</label>
+                    <input type="number" id="budgetInput" class="form-control" placeholder="Rp 0" min="0" required>
+                </div>
+                <button type="submit" class="btn-action" style="width: 100%; justify-content: center;">Simpan Anggaran</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Kode Bank -->
+    <div class="modal-overlay" id="bankModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Daftar Kode Bank Indonesia</h3>
+                <button class="close-modal" onclick="app.closeBankModal()">&times;</button>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Referensi kode bank untuk transfer antar bank.</p>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table class="bank-table">
+                    <thead>
+                        <tr>
+                            <th>Nama Bank</th>
+                            <th>Kode Bank</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bankListBody">
+                        <!-- Diisi JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">Pesan notifikasi</div>
+
+    <script>
+        /**
+         * APLIKASI DOMPETKITA
+         * Menggunakan Vanilla JS dengan LocalStorage untuk persistensi data.
+         */
+        const app = {
+            data: {
+                transactions: [],
+                budget: 0
+            },
+            
+            // Data Kode Bank Statis
+            bankCodes: [
+                { name: "Bank Rakyat Indonesia (BRI)", code: "002" },
+                { name: "Bank Central Asia (BCA)", code: "014" },
+                { name: "Bank Mandiri", code: "008" },
+                { name: "Bank Negara Indonesia (BNI)", code: "009" },
+                { name: "Bank Tabungan Negara (BTN)", code: "200" },
+                { name: "Bank CIMB Niaga", code: "022" },
+                { name: "Bank Danamon", code: "011" },
+                { name: "Bank Permata", code: "013" },
+                { name: "Bank Panin", code: "019" },
+                { name: "BCA Syariah", code: "036" },
+                { name: "BRI Syariah", code: "422" },
+                { name: "BNI Syariah", code: "427" },
+                { name: "Bank Jago", code: "402" },
+                { name: "SeaBank", code: "535" },
+                { name: "Jenius Bank BTPN", code: "213" },
+                { name: "Bank Syariah Indonesia (BSI)", code: "451" },
+                { name: "Allo Bank", code: "503" },
+                { name: "Dana Bank (DIB)", code: "904" },
+                { name: "Bank Mayapada", code: "097" },
+                { name: "Bank OCBC NISP", code: "028" }
+            ],
+
+            init: function() {
+                this.loadData();
+                this.renderBankCodes();
+                
+                // Set default date to today
+                document.getElementById('date').valueAsDate = new Date();
+                
+                this.render();
+            },
+
+            loadData: function() {
+                const storedTrans = localStorage.getItem('dompetkita_transactions');
+                const storedBudget = localStorage.getItem('dompetkita_budget');
+
+                if (storedTrans) this.data.transactions = JSON.parse(storedTrans);
+                if (storedBudget) this.data.budget = parseInt(storedBudget);
+            },
+
+            saveData: function() {
+                localStorage.setItem('dompetkita_transactions', JSON.stringify(this.data.transactions));
+                localStorage.setItem('dompetkita_budget', this.data.budget);
+                this.render();
+            },
+
+            formatRupiah: function(number) {
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(number);
+            },
+
+            // --- LOGIKA TRANSAKSI ---
+            addTransaction: function(e) {
+                e.preventDefault();
+                
+                const type = document.querySelector('input[name="type"]:checked').value;
+                const desc = document.getElementById('desc').value;
+                const amount = parseFloat(document.getElementById('amount').value);
+                const date = document.getElementById('date').value;
+
+                const newTransaction = {
+                    id: Date.now(),
+                    type,
+                    desc,
+                    amount,
+                    date
+                };
+
+                this.data.transactions.unshift(newTransaction); // Tambah ke atas
+                this.saveData();
+                this.closeModal();
+                e.target.reset();
+                document.getElementById('date').valueAsDate = new Date(); // Reset date
+                this.showToast('Transaksi berhasil disimpan!');
+            },
+
+            deleteTransaction: function(id) {
+                if(confirm('Yakin ingin menghapus transaksi ini?')) {
+                    this.data.transactions = this.data.transactions.filter(t => t.id !== id);
+                    this.saveData();
+                    this.showToast('Transaksi dihapus.');
+                }
+            },
+
+            // --- LOGIKA ANGGARAN (BUDGET) ---
+            setBudget: function() {
+                document.getElementById('budgetInput').value = this.data.budget || '';
+                document.getElementById('budgetModal').classList.add('active');
+            },
+
+            saveBudget: function(e) {
+                e.preventDefault();
+                const val = parseFloat(document.getElementById('budgetInput').value);
+                if (!isNaN(val)) {
+                    this.data.budget = val;
+                    this.saveData();
+                    this.closeBudgetModal();
+                    this.showToast('Anggaran berhasil diperbarui!');
+                }
+            },
+
+            // --- RENDER UI ---
+            render: function() {
+                const list = document.getElementById('transactionList');
+                const filter = document.getElementById('filterType').value;
+                
+                // Hitung Total
+                let income = 0;
+                let expense = 0;
+
+                // Filter & Sort Transaksi
+                const filteredData = this.data.transactions.filter(t => {
+                    if (filter === 'all') return true;
+                    return t.type === filter;
+                });
+
+                list.innerHTML = '';
+
+                if (filteredData.length === 0) {
+                    list.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 20px;">Tidak ada data transaksi.</li>';
+                } else {
+                    filteredData.forEach(t => {
+                        if (t.type === 'income') income += t.amount;
+                        else expense += t.amount;
+
+                        const li = document.createElement('li');
+                        li.className = 'transaction-item';
+                        
+                        const iconClass = t.type === 'income' ? 'inc' : 'exp';
+                        const iconSign = t.type === 'income' ? 'ph-arrow-down-left' : 'ph-arrow-up-right';
+                        const amountPrefix = t.type === 'income' ? '+' : '-';
+                        const amountClass = t.type === 'income' ? 'inc' : 'exp';
+
+                        li.innerHTML = `
+                            <div class="t-info">
+                                <div class="t-icon ${iconClass}">
+                                    <i class="ph ${iconSign}"></i>
+                                </div>
+                                <div class="t-details">
+                                    <h4>${t.desc}</h4>
+                                    <p>${new Date(t.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center;">
+                                <span class="t-amount ${amountClass}">${amountPrefix} ${this.formatRupiah(t.amount)}</span>
+                                <button class="btn-delete" onclick="app.deleteTransaction(${t.id})"><i class="ph ph-trash"></i></button>
+                            </div>
+                        `;
+                        list.appendChild(li);
+                    });
+                }
+
+                // Update Kartu Dashboard
+                const balance = income - expense;
+                document.getElementById('totalBalance').textContent = this.formatRupiah(balance);
+                document.getElementById('totalIncome').textContent = this.formatRupiah(income);
+                document.getElementById('totalExpense').textContent = this.formatRupiah(expense);
+
+                // Update Progress Budget
+                const progressBar = document.getElementById('budgetProgress');
+                const budgetTextLimit = document.getElementById('budgetLimitText');
+                const budgetTextUsed = document.getElementById('budgetUsedText');
+
+                budgetTextLimit.textContent = this.formatRupiah(this.data.budget);
+                budgetTextUsed.textContent = this.formatRupiah(expense);
+
+                if (this.data.budget > 0) {
+                    let percent = (expense / this.data.budget) * 100;
+                    if (percent > 100) percent = 100;
+                    
+                    progressBar.style.width = percent + '%';
+                    progressBar.className = 'progress-fill'; // Reset class
+
+                    if (percent >= 100) progressBar.classList.add('danger');
+                    else if (percent >= 80) progressBar.classList.add('warning');
+                } else {
+                    progressBar.style.width = '0%';
+                }
+            },
+
+            renderBankCodes: function() {
+                const tbody = document.getElementById('bankListBody');
+                this.bankCodes.forEach(bank => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${bank.name}</td><td><strong>${bank.code}</strong></td>`;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            // --- MODAL CONTROLS ---
+            openModal: function() {
+                document.getElementById('transactionModal').classList.add('active');
+            },
+            closeModal: function() {
+                document.getElementById('transactionModal').classList.remove('active');
+            },
+            closeBudgetModal: function() {
+                document.getElementById('budgetModal').classList.remove('active');
+            },
+            openBankModal: function() {
+                document.getElementById('bankModal').classList.add('active');
+            },
+            closeBankModal: function() {
+                document.getElementById('bankModal').classList.remove('active');
+            },
+
+            // --- UTILS ---
+            showToast: function(msg) {
+                const toast = document.getElementById('toast');
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        };
+
+        // Jalankan Aplikasi
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
